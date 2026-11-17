@@ -12,7 +12,7 @@ fs.mkdirSync('uploads', { recursive: true });
 fs.mkdirSync('outputs', { recursive: true });
 
 const upload = multer({ dest: 'uploads/', limits: { fileSize: 25 * 1024 * 1024 } });
-app.use(express.static('public'));
+app.use(express.static('docs'));
 app.use('/outputs', express.static('outputs'));
 
 // ---- Live updates to the office ----
