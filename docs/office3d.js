@@ -1751,10 +1751,10 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
   labels.setSize(innerWidth, innerHeight);
 });
-
-/* ---------- 14. Server events + uploads ---------- */
+/* ---------- 14. Server events + uploads (with demo mode) ---------- */
 const statusEl = document.getElementById('status');
 const setStatus = (t) => (statusEl.textContent = t);
+const DEMO = !['localhost', '127.0.0.1'].includes(location.hostname);
 let busy = false;
 
 const WORK_MSG = {
@@ -1784,28 +1784,73 @@ function jobCard(jobId, name = 'Meeting') {
   return card;
 }
 
-const es = new EventSource('/events');
-es.onmessage = (e) => {
-  const ev = JSON.parse(e.data);
+function handleEvent(ev) {
   const a = byId[ev.agent];
   if (ev.type === 'status' && a) {
     if (ev.state === 'working') a.startWork(WORK_MSG[a.id]);
     if (ev.state === 'done') {
-      a.endWork('Done. Your file is ready.');
+      a.endWork(DEMO ? 'Done. (Demo only)' : 'Done. Your file is ready.');
       const [label, ext] = FILES[a.id];
-      jobCard(ev.jobId).querySelector('.links').insertAdjacentHTML('beforeend',
-        `<a class="file" href="${ev.url}" download>${ICON[a.id]}<span class="grow">${label}<small>${ext}</small></span>${ICON.download}</a>`);
+      const links = jobCard(ev.jobId).querySelector('.links');
+      if (ev.url) {
+        links.insertAdjacentHTML('beforeend',
+          `<a class="file" href="${ev.url}" download>${ICON[a.id]}<span class="grow">${label}<small>${ext}</small></span>${ICON.download}</a>`);
+      } else {
+        links.insertAdjacentHTML('beforeend',
+          `<div class="file" title="Demo only. No file is created.">${ICON[a.id]}<span class="grow">${label}<small>sample</small></span></div>`);
+      }
     }
     if (ev.state === 'error') a.endWork('I hit a problem: ' + String(ev.msg).slice(0, 50), true);
   }
   if (ev.type === 'complete') {
     busy = false;
-    setStatus('All files are ready. Drop another recording anytime.');
+    setStatus(DEMO
+      ? 'Demo finished. This page is a preview only, so no real files were made. Click "Run demo" to watch again.'
+      : 'All files are ready. Drop another recording anytime.');
   }
-};
+}
+
+if (!DEMO) {
+  const es = new EventSource('/events');
+  es.onmessage = (e) => handleEvent(JSON.parse(e.data));
+}
+
+// ---- Demo mode: a pretend job so visitors can watch the team work ----
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function runDemo(name = 'sample-meeting.mp3') {
+  if (busy) return setStatus('Demo is already running. Watch the team!');
+  busy = true;
+  currentFile = name;
+  const jobId = 'demo-' + Date.now();
+  jobCard(jobId, name + ' (demo)');
+  setStatus(`Demo: briefing the team on ${name}...`);
+  const send = (agent, state) => handleEvent({ type: 'status', jobId, agent, state });
+  send('transcriber', 'working');
+  await wait(10000);
+  send('transcriber', 'done');
+  send('summarizer', 'working');
+  send('slides', 'working');
+  await wait(9000);
+  send('summarizer', 'done');
+  await wait(4000);
+  send('slides', 'done');
+  handleEvent({ type: 'complete', jobId });
+}
+
+const uploadBtn = document.querySelector('label.btn.primary');
+if (DEMO) {
+  for (const node of uploadBtn.childNodes) {
+    if (node.nodeType === 3 && node.textContent.trim()) node.textContent = ' Run demo ';
+  }
+  uploadBtn.addEventListener('click', (e) => { e.preventDefault(); runDemo(); });
+  setStatus('Demo mode: uploads are turned off on this page. Click "Run demo" to watch the team work.');
+  const empty = document.querySelector('#results .empty');
+  if (empty) empty.textContent = 'Demo mode: sample deliverables will appear here. No real files are created on this page.';
+}
 
 async function handleFile(file) {
   if (!file) return;
+  if (DEMO) return runDemo(file.name);
   if (busy) return setStatus('The team is still working on the last file. Please wait.');
   if (!/^(audio|video)\//.test(file.type)) return setStatus('That file is not audio. Try MP3, M4A, WAV or MP4.');
   if (file.size > 25 * 1024 * 1024) return setStatus('That file is over 25 MB. Compress it first.');
