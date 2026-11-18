@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #0b0e12;
   --panel: rgba(13, 17, 22, 0.86);
   --line: #1f262e;
@@ -99,3 +99,45 @@ em { font-style: normal; color: var(--accent); }
   border: 1.5px solid var(--line-2); background: #101722; }
 .member .av svg { width: 100%; height: 100%; display: block; }
 .member.focused .av, .member:hover .av { border-color: var(--accent); }
+/* ---------- Mobile ---------- */
+#scene canvas { touch-action: none; }
+
+@media (max-width: 760px), (max-height: 500px) {
+  .topbar { top: 10px; left: 10px; right: 10px; flex-wrap: wrap; gap: 8px; padding: 8px; border-radius: 16px; }
+  .brand-text { display: none; }
+  .mark { width: 34px; height: 34px; }
+  .actions { margin-left: auto; gap: 8px; }
+  .btn { height: 38px; padding: 0 14px; font-size: 13px; }
+  #overview { font-size: 0; gap: 0; padding: 0 11px; }
+  #overview svg { width: 18px; height: 18px; }
+  .pill { display: flex; order: 3; flex: 1 1 100%; padding: 8px 12px; font-size: 12px; }
+  .pill span { white-space: normal; overflow: visible; line-height: 1.35; }
+
+  .team { top: auto; bottom: 10px; left: 10px; right: 10px; width: auto; padding: 8px; border-radius: 16px; }
+  .team .panel-title { display: none; }
+  #team { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  #team::-webkit-scrollbar { display: none; }
+  .member { flex: 1 0 auto; min-width: 128px; grid-template-columns: 36px 1fr; gap: 2px 8px; padding: 8px 10px; }
+  .member .av { width: 36px; height: 36px; }
+  .member .who b { font-size: 13px; }
+  .member .who small { display: none; }
+  .member .st { font-size: 11px; gap: 6px; }
+  .member .st em { display: block; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .results { top: 150px; left: 10px; right: 10px; width: auto; max-height: 30vh; padding: 10px; border-radius: 16px; }
+  .results:has(.empty) { display: none; }
+  .results .panel-title { margin-bottom: 8px; }
+  .job { padding: 8px; margin-bottom: 8px; }
+  .file { padding: 8px; font-size: 13px; }
+
+  .hint { display: none; }
+  .label3d .bubble { font-size: 10.5px; padding: 5px 8px; margin-bottom: 4px; max-width: 160px; white-space: normal; text-align: center; }
+  .label3d .name { font-size: 9px; padding: 2px 7px; }
+  .drop-card { padding: 28px 24px; margin: 0 16px; border-radius: 20px; }
+  .drop-card h2 { font-size: 22px; }
+}
+
+@media (max-width: 380px) {
+  .btn.primary { padding: 0 12px; }
+  .member { min-width: 112px; }
+}
