@@ -15,7 +15,8 @@ const MONO = '"JetBrains Mono", ui-monospace, monospace';
 
 /* ---------- 1. Renderer, scene, camera, lights ---------- */
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const MOBILE = matchMedia('(max-width: 760px), (max-height: 500px)').matches;
+renderer.setPixelRatio(Math.min(devicePixelRatio, MOBILE ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -35,7 +36,10 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.45;
 
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 300);
-const HOME = { pos: new THREE.Vector3(30, 36, 36), target: new THREE.Vector3(5.5, 0, 0) };
+const homeFor = () => (innerWidth < 760 || innerWidth / innerHeight < 0.9)
+  ? { pos: new THREE.Vector3(52, 48, 14), target: new THREE.Vector3(5.5, 0, 0) }
+  : { pos: new THREE.Vector3(30, 36, 36), target: new THREE.Vector3(5.5, 0, 0) };
+const HOME = homeFor();
 camera.position.copy(HOME.pos);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(HOME.target);
@@ -52,7 +56,7 @@ sun.position.set(22, 32, 20);
 sun.target.position.set(5.5, 0, 0);
 scene.add(sun.target);
 sun.castShadow = true;
-sun.shadow.mapSize.set(4096, 4096);
+sun.shadow.mapSize.set(MOBILE ? 2048 : 4096, MOBILE ? 2048 : 4096);
 Object.assign(sun.shadow.camera, { left: -27, right: 27, top: 27, bottom: -27, near: 1, far: 110 });
 sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.bias = -0.0003;
@@ -1750,6 +1754,9 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
   labels.setSize(innerWidth, innerHeight);
+  const h = homeFor();
+  HOME.pos.copy(h.pos);
+  HOME.target.copy(h.target);
 });
 /* ---------- 14. Server events + uploads (with demo mode) ---------- */
 const statusEl = document.getElementById('status');
